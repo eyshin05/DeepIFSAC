@@ -9,3 +9,4 @@ __pycache__/
 .worktrees/
 .DS_Store
 .ipynb_checkpoints/
+.codex
