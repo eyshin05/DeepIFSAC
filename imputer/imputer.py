@@ -4,7 +4,7 @@ import numpy as np
 from argparse import Namespace
 from sklearn.base import BaseEstimator, TransformerMixin
 
-# 루트 경로를 sys.path에 추가 (기존 모듈 임포트용)
+# Add repo root to sys.path for importing project-level modules
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
@@ -15,37 +15,37 @@ from imputer.preprocessor import TabularPreprocessor
 class DeepIFSACImputer(BaseEstimator, TransformerMixin):
     """sklearn-style DeepIFSAC imputer.
 
-    fit(X)으로 모델 학습, transform(X)으로 결측값 보완,
-    get_features(X)으로 Transformer 임베딩 추출.
+    Use fit(X) to train the model, transform(X) to impute missing values,
+    and get_features(X) to extract Transformer embeddings.
 
     Parameters
     ----------
     cat_features : list of int, optional
-        카테고리 컬럼 인덱스. None이면 pandas dtype 자동 감지.
+        Indices of categorical columns. If None, inferred from pandas dtype.
     pretrain : bool
-        True면 Contrastive 사전학습 포함, False면 Denoising만 수행.
+        If True, includes contrastive pretraining. If False, denoising only.
     pretrain_epochs : int
-        사전학습 에포크 수.
+        Number of pretraining epochs.
     embedding_size : int
-        Transformer 임베딩 차원.
+        Transformer embedding dimension.
     transformer_depth : int
-        Transformer 레이어 수.
+        Number of Transformer layers.
     attention_heads : int
-        Multi-head attention 헤드 수.
+        Number of multi-head attention heads.
     attention_type : str
-        어텐션 타입. 'col', 'colrow', 'row', 'rowcol', 'parallel', 'colrowatt'.
+        Attention type. One of 'col', 'colrow', 'row', 'rowcol', 'parallel', 'colrowatt'.
     missing_rate : float
-        학습 시 추가 인위적 결측률 (0~1).
+        Artificial missing rate injected during training (0~1).
     missing_type : str
-        결측 패턴. 'mcar', 'mnar', 'mar'.
+        Missing pattern. One of 'mcar', 'mnar', 'mar'.
     corruption_type : str
-        증강 방식. 'cutmix', 'zeroes', 'median', 'no_corruption'.
+        Augmentation method. One of 'cutmix', 'zeroes', 'median', 'no_corruption'.
     batch_size : int
-        배치 크기.
+        Batch size.
     device : str
-        'auto', 'cpu', 'cuda:0' 등.
+        Device to use. One of 'auto', 'cpu', 'cuda:0', etc.
     random_state : int
-        재현성을 위한 시드.
+        Random seed for reproducibility.
     """
 
     def __init__(
@@ -89,12 +89,12 @@ class DeepIFSACImputer(BaseEstimator, TransformerMixin):
     # ------------------------------------------------------------------
 
     def fit(self, X, y=None):
-        """모델을 학습한다.
+        """Train the model.
 
         Parameters
         ----------
         X : pd.DataFrame or np.ndarray
-            결측값(NaN)이 포함된 학습 데이터.
+            Training data with missing values (NaN).
         y : ignored
 
         Returns
@@ -107,7 +107,7 @@ class DeepIFSACImputer(BaseEstimator, TransformerMixin):
 
         device = self._resolve_device()
 
-        # 1. 전처리
+        # 1. Preprocessing
         self.preprocessor_ = TabularPreprocessor(cat_features=self.cat_features)
         self.preprocessor_.fit(X)
         processed = self.preprocessor_.transform(X)
@@ -119,28 +119,28 @@ class DeepIFSACImputer(BaseEstimator, TransformerMixin):
         cat_idxs = self.preprocessor_.cat_idxs_
         con_idxs = self.preprocessor_.con_idxs_
 
-        # 2. 학습용 imputed 버전 (NaN을 mean으로 채운 버전)
+        # 2. Build imputed training data (NaN replaced with column mean)
         import torch
         X_train_imp = torch.tensor(X_combined)
-        train_mask_full = torch.tensor(1 - nan_mask, dtype=torch.float32)  # 1=missing, (n, n_features)
-        # pretraining.py의 denoising loss는 con_outs (연속형 출력)와 train_mask를 곱하므로
-        # t_mask를 연속형 컬럼만으로 슬라이싱해야 shape mismatch를 방지함
+        train_mask_full = torch.tensor(1 - nan_mask, dtype=torch.float32)  # 1=missing, shape (n, n_features)
+        # The denoising loss in pretraining.py multiplies con_outs by train_mask,
+        # so t_mask must be sliced to continuous columns only to avoid shape mismatch.
         train_mask = train_mask_full[:, con_idxs] if len(con_idxs) > 0 else train_mask_full
 
-        # 3. 정규화 파라미터
+        # 3. Normalization parameters
         train_mean = self.preprocessor_.mean_
         train_std = self.preprocessor_.std_
         continuous_mean_std = np.array([train_mean, train_std], dtype=np.float32)
         imp_continuous_mean_std = continuous_mean_std
 
-        # 4. cat_dims (CLS 토큰 prepend)
+        # 4. cat_dims with CLS token prepended
         cat_dims = np.array([1] + list(self.preprocessor_.cat_dims_), dtype=int)
 
-        # 5. DataSet 구성
+        # 5. Build data dicts
         X_dict = {'data': X_combined, 'mask': nan_mask}
         Y_dict = {'data': np.zeros((n, 1), dtype=np.int64)}
 
-        # 6. 모델 생성
+        # 6. Build model
         from models.pretrainmodel import DeepIFSAC
         self.model_ = DeepIFSAC(
             categories=tuple(cat_dims),
@@ -158,7 +158,7 @@ class DeepIFSACImputer(BaseEstimator, TransformerMixin):
             y_dim=2,
         ).to(device)
 
-        # 7. 사전학습
+        # 7. Pretrain
         from pretraining import DeepIFSAC_pretrain
         opt = self._make_opt()
         self.model_, _, _ = DeepIFSAC_pretrain(
@@ -176,19 +176,19 @@ class DeepIFSACImputer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
-        """결측값을 보완한 배열을 반환한다.
+        """Return an array with missing values imputed.
 
         Parameters
         ----------
         X : pd.DataFrame or np.ndarray
-            결측값(NaN)이 포함된 데이터.
+            Data with missing values (NaN).
 
         Returns
         -------
         np.ndarray, shape (n_samples, n_features)
-            결측 위치가 모델 예측값으로 채워진 배열.
-            카테고리 컬럼은 LabelEncoder 정수 코드로 반환됨.
-            원본 레이블로 복원하려면 preprocessor_.inverse_transform() 사용.
+            Array with missing positions filled by model predictions.
+            Categorical columns are returned as LabelEncoder integer codes.
+            Use preprocessor_.inverse_transform() to recover original labels.
         """
         import torch
         from augmentations import embed_data_mask
@@ -207,7 +207,7 @@ class DeepIFSACImputer(BaseEstimator, TransformerMixin):
         n = X_combined.shape[0]
         imp_mean, imp_std = self.imp_continuous_mean_std_
 
-        # CLS 토큰 prepend
+        # Prepend CLS token
         cls_col = np.zeros((n, 1), dtype=np.int64)
         cls_mask_arr = np.ones((n, 1), dtype=np.float32)
         X_cat_cls = np.concatenate([cls_col, X_cat], axis=1)
@@ -241,7 +241,7 @@ class DeepIFSACImputer(BaseEstimator, TransformerMixin):
 
                 if cat_outs:
                     batch_cat = []
-                    for j in range(1, len(cat_outs)):  # CLS(0) 제외
+                    for j in range(1, len(cat_outs)):  # skip CLS token at index 0
                         batch_cat.append(torch.argmax(cat_outs[j], dim=1).cpu().numpy())
                     if batch_cat:
                         all_cat_preds.append(np.stack(batch_cat, axis=1))
@@ -263,7 +263,7 @@ class DeepIFSACImputer(BaseEstimator, TransformerMixin):
         return X_result.astype(np.float64)
 
     def get_features(self, X):
-        """Transformer 마지막 레이어 임베딩을 반환한다.
+        """Return Transformer hidden states from the last layer.
 
         Parameters
         ----------
@@ -272,7 +272,7 @@ class DeepIFSACImputer(BaseEstimator, TransformerMixin):
         Returns
         -------
         np.ndarray, shape (n_samples, n_features * embedding_size)
-            각 샘플의 Transformer 히든 스테이트 (CLS 토큰 제외 후 flatten).
+            Flattened Transformer hidden states per sample, excluding the CLS token.
         """
         import torch
         from augmentations import embed_data_mask
@@ -309,7 +309,7 @@ class DeepIFSACImputer(BaseEstimator, TransformerMixin):
                     x_categ, x_cont_norm, x_cat_m, x_con_m, self.model_, False
                 )
                 hidden = self.model_.transformer(x_categ_enc, x_cont_enc)
-                # CLS 토큰(index 0) 제외 후 flatten: (batch, n_features * dim)
+                # Exclude CLS token (index 0) and flatten: (batch, n_features * dim)
                 features = hidden[:, 1:, :].flatten(1)
                 all_embeddings.append(features.cpu().numpy())
 

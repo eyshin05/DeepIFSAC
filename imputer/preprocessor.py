@@ -5,12 +5,12 @@ from sklearn.preprocessing import LabelEncoder
 
 
 class TabularPreprocessor(BaseEstimator, TransformerMixin):
-    """카테고리/연속형 분리, LabelEncoding, 결측 마스크 생성을 담당하는 전처리기.
+    """Preprocessor that splits cat/con features, applies LabelEncoding, and builds missing masks.
 
     Parameters
     ----------
     cat_features : list of int, optional
-        카테고리 컬럼의 인덱스 리스트. None이면 pandas dtype(object/category)으로 자동 감지.
+        Indices of categorical columns. If None, inferred from pandas dtype (object/category).
     """
 
     def __init__(self, cat_features=None):
@@ -97,7 +97,7 @@ class TabularPreprocessor(BaseEstimator, TransformerMixin):
         }
 
     def inverse_transform(self, X_combined):
-        """결합 행렬을 원본 피처 공간으로 복원."""
+        """Restore the combined matrix back to the original feature space."""
         n = X_combined.shape[0]
         result = np.empty((n, self.n_features_in_), dtype=object)
         for k, idx in enumerate(self.cat_idxs_):
