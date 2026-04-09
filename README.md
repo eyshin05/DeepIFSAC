@@ -1,19 +1,17 @@
-# 1. DeepIFSAC
-This is the official implementation of paper titled, "DeepIFSAC: Deep Imputation of Missing Values Using Feature and Sample Attention within Contrastive Framework".
+# DeepIFSAC
+
+Official implementation of **"DeepIFSAC: Deep Imputation of Missing Values Using Feature and Sample Attention within Contrastive Framework"**.
 
 ---
 
-## 📖 Paper  
-If you use this repository, please cite our paper:  
+## Paper
 
-> Kowsar, I., Rabbani, S. B., Hou, Y., & Samad, M. D. (2025).  
-> **DeepIFSAC: Deep imputation of missing values using feature and sample attention within contrastive framework.**  
-> *Knowledge-Based Systems, 318,* 113506.  
+If you use this repository, please cite our paper:
+
+> Kowsar, I., Rabbani, S. B., Hou, Y., & Samad, M. D. (2025).
+> **DeepIFSAC: Deep imputation of missing values using feature and sample attention within contrastive framework.**
+> *Knowledge-Based Systems, 318,* 113506.
 > [https://doi.org/10.1016/j.knosys.2025.113506](https://doi.org/10.1016/j.knosys.2025.113506)
-
----
-
-## 📌 Citation (BibTeX)  
 
 ```bibtex
 @article{kowsar2025deepifsac,
@@ -26,95 +24,69 @@ If you use this repository, please cite our paper:
   publisher={Elsevier}
 }
 ```
-**DeepIFSAC** is a deep learning framework for tabular data that leverages attention-based architecture within a contrastive learning framework for missing value imputation. This repository provides code for data processing, training the DeepIFSAC model for missing value imputation on Tabular data set and a real-world EHR data set.
+
+**DeepIFSAC** is a deep learning framework for tabular data that combines attention-based architecture with contrastive learning for missing value imputation. It supports both OpenML benchmark datasets and arbitrary numpy/pandas inputs via a sklearn-compatible API.
 
 ---
 
-## 2. Table of Contents
+## Table of Contents
 
-1. [Overview](#3-overview)
-2. [Installation](#4-installation)
-3. [Dataset](#5-dataset)
-4. [Training the Model](#6-training-the-model)
-   - [Pretraining](#61-pretraining)
-   - [Finetuning/Downstream Evaluation](#62-finetuningdownstream-evaluation)
-5. [Results and Outputs](#7-results-and-outputs)
-6. [Usage Examples](#8-usage-examples)
-7. [Project Structure](#9-project-structure)
+1. [Overview](#overview)
+2. [Installation](#installation)
+3. [Dataset](#dataset)
+4. [Training the Model](#training-the-model)
+5. [Results and Outputs](#results-and-outputs)
+6. [sklearn-style Imputer API](#sklearn-style-imputer-api)
+7. [Project Structure](#project-structure)
 
 ---
 
-## 3. Overview
+## Overview
 
-DeepIFSAC is designed to work with tabular datasets (e.g., from OpenML). The model implements both a **pretraining phase** (with options for contrastive and denoising modules along with advanced data augmentations like CutMix and MixUp) and a **finetuning phase** that trains downstream classifiers.
+DeepIFSAC implements a **pretraining phase** (contrastive and denoising objectives with CutMix/MixUp augmentation) and a **finetuning phase** for downstream classification tasks.
 
 ---
 
-## 4. Installation
+## Installation
 
-### 4.1 Clone the Repository
+### Clone the Repository
 
 ```bash
 git clone https://github.com/mdsamad001/DeepIFSAC.git
 cd DeepIFSAC
 ```
 
-### 4.2 Create a Virtual Environment (optional but recommended)
+### Create a Virtual Environment with uv
 
-If you use Conda, create an environment using the provided YAML file:
+```bash
+uv venv .venv --python 3.11
+uv sync
+source .venv/bin/activate
+```
+
+Alternatively, using conda:
 
 ```bash
 conda env create -f difsac_env.yml
 conda activate DeepIFSAC
 ```
 
-Ensure that you have PyTorch installed with the proper CUDA version if you intend to use a GPU. All dependencies and their versions are specified in the `environment.yml` file.
+---
+
+## Dataset
+
+The training script uses `my_data_prep_openml` from the `data_openml` module. Provide a dataset ID via `--dset_id` to automatically download and preprocess the dataset from OpenML.
 
 ---
 
-## 5. Dataset
+## Training the Model
 
-The code leverages a dataset loading function (`my_data_prep_openml`) located in the `data_openml` module. By providing a dataset ID (`--dset_id`), the code automatically downloads and processes the dataset from OpenML.
+Training has two phases: **pretraining (imputation)** and **finetuning (classification)**.
 
----
+### Pretraining
 
-## 6. Training the Model
+Pretraining uses denoising and/or contrastive objectives. Run with the `--pretrain` flag:
 
-The training process is divided into two main phases: **pretraining (Imputation)** and **downstream finetuning (Classification)**.
-
-### 6.1 Pretraining (Imputation)
-
-DeepIFSAC can be pretrained using various objectives (e.g., denoising, contrastive loss). To run pretraining, set the `--pretrain` flag and specify additional parameters (like number of pretrain epochs, augmentation type, missing rate, etc.). The pretraining function (`DeepIFSAC_pretrain`) takes care of data augmentation, computes losses over epochs, and saves training metrics.
-
-### 6.2 Finetuning/Downstream Evaluation (Classification)
-
-After pretraining, the model can be finetuned on a downstream task. The repository supports:
-
-- Training classical classifiers (e.g., Logistic Regression, Gradient Boosting) on features extracted from the model.
-- Training a separate MLP head (using `simple_MLP`) for further finetuning.
-
----
-
-## 7. Results and Outputs
-
-### 7.1 Pretrained Model Weights
-
-Model weights are saved under the `./results/model_weights` directory. The filename is generated based on parameters such as dataset ID, attention type, missing type, missing rate, dataset seed, and corruption type.
-
-### 7.2 Training Metrics
-
-Pretraining metrics (e.g., running loss per epoch) are saved as pickle files in the `./results/training_scores` directory.
-
-### 7.3 Downstream Performance
-
-After finetuning, the performance of both the classical classifiers (LR, GBT) and the MLP head is printed to the console.
-
----
-
-## 8. Usage Examples
-
-To train the DeepIFSAC model with pretraining for a multiclass task on dataset ID 11, run:
-For DeepIFSAC with contrastive --attentiontype = colorow which takes default pt_tasks = ['denoising', 'contrastive'] and for DeepIFSAC without contrastive, --attentiontype = colorowatt with pt_tasks = ['denoising']
 ```bash
 python my_train.py \
   --dset_id 11 \
@@ -132,83 +104,105 @@ python my_train.py \
   --pt_aug cutmix
 ```
 
-Adjust parameters as needed. Refer to the command-line argument help for more details:
+- `--attentiontype colrow` → DeepIFSAC with contrastive loss (`pt_tasks = ['denoising', 'contrastive']`)
+- `--attentiontype colrowatt` → DeepIFSAC without contrastive loss (`pt_tasks = ['denoising']`)
 
 ```bash
 python my_train.py --help
 ```
 
+### Finetuning / Downstream Evaluation
+
+After pretraining, the model can be evaluated using classical classifiers (Logistic Regression, Gradient Boosting) on extracted features, or finetuned with a separate MLP head.
+
 ---
 
-## 9. sklearn-style Imputer API
+## Results and Outputs
 
-임의의 `numpy`/`pandas` 데이터에 바로 적용 가능한 sklearn-compatible imputer 클래스를 제공합니다.
+| Output | Location |
+|--------|----------|
+| Model weights | `./results/model_weights/` |
+| Training metrics | `./results/training_scores/` (pickle) |
+| Downstream performance | printed to console |
 
-### 사용 예시
+---
+
+## sklearn-style Imputer API
+
+A sklearn-compatible imputer class for arbitrary numpy/pandas input — no OpenML dependency required.
+
+### Usage
 
 ```python
 import numpy as np
 import pandas as pd
 from imputer import DeepIFSACImputer, TabularPreprocessor
 
-# NaN으로 결측값을 표시한 데이터 준비
-# pandas DataFrame의 object/category dtype 컬럼은 자동으로 카테고리로 인식됩니다
+# Prepare data with NaN indicating missing values
+# pandas DataFrame columns with object/category dtype are auto-detected as categorical
 df = pd.read_csv("your_data.csv")
 
-# 결측값 보완
+# Impute missing values
 imputer = DeepIFSACImputer(
-    pretrain=True,          # Contrastive 사전학습 활성화
+    pretrain=True,       # enable contrastive pretraining
     pretrain_epochs=100,
     embedding_size=32,
-    device='auto',          # GPU 자동 감지
+    device='auto',       # auto-select GPU/CPU
 )
 imputer.fit(df)
-X_imputed = imputer.transform(df)  # np.ndarray, 원본과 동일한 shape
+X_imputed = imputer.transform(df)  # np.ndarray, same shape as input
 
-# Transformer 임베딩 추출 (다운스트림 ML용)
+# Extract Transformer embeddings for downstream ML
 X_embed = imputer.get_features(df)  # shape: (n_samples, embedding_size * n_features)
 
-# ndarray 입력 시 카테고리 컬럼 직접 지정
+# Specify categorical columns explicitly for ndarray input
 imputer2 = DeepIFSACImputer(cat_features=[0, 2], pretrain=False)
 imputer2.fit(X_train)
 
-# TabularPreprocessor 단독 사용 (sklearn Pipeline 통합 가능)
+# Use TabularPreprocessor standalone (compatible with sklearn Pipeline)
 preprocessor = TabularPreprocessor()
 preprocessor.fit(df)
 processed = preprocessor.transform(df)
-# processed: {'X_cat', 'X_con', 'cat_mask', 'con_mask', 'X_combined', 'nan_mask'}
+# processed keys: 'X_cat', 'X_con', 'cat_mask', 'con_mask', 'X_combined', 'nan_mask'
 ```
 
-### 주요 파라미터
+### Parameters
 
-| 파라미터 | 기본값 | 설명 |
-|---|---|---|
-| `pretrain` | `True` | Contrastive 사전학습 여부 |
-| `pretrain_epochs` | `100` | 사전학습 에포크 수 |
-| `embedding_size` | `32` | Transformer 임베딩 차원 |
-| `attention_type` | `'colrow'` | 어텐션 타입 (`col`, `colrow`, `row` 등) |
-| `missing_rate` | `0.3` | 학습 시 인위적 결측률 |
-| `device` | `'auto'` | 디바이스 (`auto`, `cpu`, `cuda:0`) |
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `pretrain` | `True` | Enable contrastive pretraining |
+| `pretrain_epochs` | `100` | Number of pretraining epochs |
+| `embedding_size` | `32` | Transformer embedding dimension |
+| `transformer_depth` | `6` | Number of Transformer layers |
+| `attention_heads` | `8` | Number of attention heads |
+| `attention_type` | `'colrow'` | Attention type (`col`, `colrow`, `row`, etc.) |
+| `missing_rate` | `0.3` | Artificial missing rate during training |
+| `device` | `'auto'` | Device (`auto`, `cpu`, `cuda:0`) |
+| `random_state` | `42` | Random seed for reproducibility |
 
 ---
 
-## 10. Project Structure
+## Project Structure
 
 ```
 DeepIFSAC/
-├── data_openml
-│   ├── my_data_prep_openml.py      # Data processing and loading from OpenML.
-│   └── ...
-├── models
-│   ├── pretrainmodel.py                # Implementation of the DeepIFSAC model.
-│   ├── model.py                    # Additional models (e.g., simple_MLP).
-│   └── ...
-├── utils
-│   └── ...                         # Helper functions for training, evaluation, etc.
-├── augmentations
-│   └── ...                         # Data augmentation routines.
-├── pretraining.py       # Pretraining functions for DeepIFSAC.
-├── my_train.py                     # Main training script.
-├── environment.yaml                # Environment configuration file.
-└── README.md                       # This file.
+├── imputer/
+│   ├── __init__.py          # Public API: DeepIFSACImputer, TabularPreprocessor
+│   ├── imputer.py           # DeepIFSACImputer (sklearn-compatible)
+│   └── preprocessor.py      # TabularPreprocessor (cat/con split, encoding, masking)
+├── models/
+│   ├── pretrainmodel.py     # DeepIFSAC model definition
+│   └── model.py             # Transformer, MLP building blocks
+├── data_openml/
+│   └── my_data_prep_openml.py  # OpenML data loading and preprocessing
+├── augmentations.py         # Data augmentation (CutMix, MixUp, embed_data_mask)
+├── pretraining.py           # DeepIFSAC_pretrain() function
+├── corruptor.py             # Corruption strategies (draw, noise, KNN, MICE)
+├── my_train.py              # Main training script (OpenML pipeline)
+├── pyproject.toml           # uv environment definition
+├── difsac_env.yml           # conda environment definition
+└── tests/
+    └── imputer/
+        ├── test_preprocessor.py
+        └── test_imputer.py
 ```
