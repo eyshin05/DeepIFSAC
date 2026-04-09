@@ -1,0 +1,15 @@
+Metadata-Version: 2.4
+Name: deepifsac
+Version: 0.1.0
+Requires-Python: >=3.10
+License-File: LICENSE
+Requires-Dist: torch>=2.0.0
+Requires-Dist: numpy>=1.24
+Requires-Dist: pandas>=1.5
+Requires-Dist: scikit-learn>=1.2
+Requires-Dist: scipy>=1.10
+Requires-Dist: einops>=0.6
+Requires-Dist: openml>=0.13
+Requires-Dist: matplotlib>=3.7
+Requires-Dist: xgboost>=1.7
+Dynamic: license-file

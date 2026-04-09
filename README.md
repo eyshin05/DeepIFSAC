@@ -64,6 +64,12 @@ uv sync
 source .venv/bin/activate
 ```
 
+To consume DeepIFSAC directly from Git in another uv-managed project:
+
+```bash
+uv add "deepifsac @ git+https://github.com/mdsamad001/DeepIFSAC.git"
+```
+
 Alternatively, using conda:
 
 ```bash
@@ -136,7 +142,7 @@ A sklearn-compatible imputer class for arbitrary numpy/pandas input — no OpenM
 ```python
 import numpy as np
 import pandas as pd
-from imputer import DeepIFSACImputer, TabularPreprocessor
+from deepifsac import DeepIFSACImputer, TabularPreprocessor
 
 # Prepare data with NaN indicating missing values
 # pandas DataFrame columns with object/category dtype are auto-detected as categorical
@@ -186,6 +192,24 @@ processed = preprocessor.transform(df)
 
 ```
 DeepIFSAC/
+├── deepifsac/
+│   ├── __init__.py          # Public package API
+│   ├── augmentations.py
+│   ├── corruptor.py
+│   ├── data_openml.py
+│   ├── pretraining.py
+│   ├── imputer/
+│   │   ├── __init__.py
+│   │   ├── imputer.py
+│   │   └── preprocessor.py
+│   ├── models/
+│   │   ├── __init__.py
+│   │   ├── model.py
+│   │   └── pretrainmodel.py
+│   └── missingness/
+│       ├── __init__.py
+│       ├── sampler.py
+│       └── utils.py
 ├── imputer/
 │   ├── __init__.py          # Public API: DeepIFSACImputer, TabularPreprocessor
 │   ├── imputer.py           # DeepIFSACImputer (sklearn-compatible)

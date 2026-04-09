@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "deepifsac"
 version = "0.1.0"
@@ -12,8 +16,10 @@ dependencies = [
     "openml>=0.13",
     "matplotlib>=3.7",
     "xgboost>=1.7",
-    "pytest>=7.0",
 ]
+
+[tool.setuptools.packages.find]
+include = ["deepifsac*"]
 
 [tool.uv.sources]
 torch = { index = "pytorch-cpu" }
@@ -25,5 +31,6 @@ explicit = true
 
 [dependency-groups]
 dev = [
+    "pytest>=7.0",
     "pyflakes>=3.4.0",
 ]

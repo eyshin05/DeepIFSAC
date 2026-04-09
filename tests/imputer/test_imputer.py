@@ -1,13 +1,9 @@
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
 import numpy as np
 import pandas as pd
 
 
 def test_import():
-    from imputer.imputer import DeepIFSACImputer
+    from deepifsac import DeepIFSACImputer
     assert DeepIFSACImputer is not None
 
 
@@ -19,7 +15,7 @@ def _make_simple_df(n=80):
 
 
 def _small_imputer(**kwargs):
-    from imputer.imputer import DeepIFSACImputer
+    from deepifsac import DeepIFSACImputer
     defaults = dict(
         pretrain=False,
         pretrain_epochs=1,
@@ -88,6 +84,6 @@ def test_get_features_shape():
 # --- public API ---
 
 def test_public_api_import():
-    from imputer import TabularPreprocessor, DeepIFSACImputer
+    from deepifsac import TabularPreprocessor, DeepIFSACImputer
     assert TabularPreprocessor is not None
     assert DeepIFSACImputer is not None
