@@ -67,7 +67,7 @@ source .venv/bin/activate
 To consume DeepIFSAC directly from Git in another uv-managed project:
 
 ```bash
-uv add "deepifsac @ git+https://github.com/mdsamad001/DeepIFSAC.git"
+uv add "deepifsac @ git+https://github.com/eyshin05/DeepIFSAC.git"
 ```
 
 Alternatively, using conda:
