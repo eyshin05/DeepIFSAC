@@ -140,7 +140,59 @@ python my_train.py --help
 
 ---
 
-## 9. Project Structure
+## 9. sklearn-style Imputer API
+
+임의의 `numpy`/`pandas` 데이터에 바로 적용 가능한 sklearn-compatible imputer 클래스를 제공합니다.
+
+### 사용 예시
+
+```python
+import numpy as np
+import pandas as pd
+from imputer import DeepIFSACImputer, TabularPreprocessor
+
+# NaN으로 결측값을 표시한 데이터 준비
+# pandas DataFrame의 object/category dtype 컬럼은 자동으로 카테고리로 인식됩니다
+df = pd.read_csv("your_data.csv")
+
+# 결측값 보완
+imputer = DeepIFSACImputer(
+    pretrain=True,          # Contrastive 사전학습 활성화
+    pretrain_epochs=100,
+    embedding_size=32,
+    device='auto',          # GPU 자동 감지
+)
+imputer.fit(df)
+X_imputed = imputer.transform(df)  # np.ndarray, 원본과 동일한 shape
+
+# Transformer 임베딩 추출 (다운스트림 ML용)
+X_embed = imputer.get_features(df)  # shape: (n_samples, embedding_size * n_features)
+
+# ndarray 입력 시 카테고리 컬럼 직접 지정
+imputer2 = DeepIFSACImputer(cat_features=[0, 2], pretrain=False)
+imputer2.fit(X_train)
+
+# TabularPreprocessor 단독 사용 (sklearn Pipeline 통합 가능)
+preprocessor = TabularPreprocessor()
+preprocessor.fit(df)
+processed = preprocessor.transform(df)
+# processed: {'X_cat', 'X_con', 'cat_mask', 'con_mask', 'X_combined', 'nan_mask'}
+```
+
+### 주요 파라미터
+
+| 파라미터 | 기본값 | 설명 |
+|---|---|---|
+| `pretrain` | `True` | Contrastive 사전학습 여부 |
+| `pretrain_epochs` | `100` | 사전학습 에포크 수 |
+| `embedding_size` | `32` | Transformer 임베딩 차원 |
+| `attention_type` | `'colrow'` | 어텐션 타입 (`col`, `colrow`, `row` 등) |
+| `missing_rate` | `0.3` | 학습 시 인위적 결측률 |
+| `device` | `'auto'` | 디바이스 (`auto`, `cpu`, `cuda:0`) |
+
+---
+
+## 10. Project Structure
 
 ```
 DeepIFSAC/
