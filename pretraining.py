@@ -1,15 +1,16 @@
 import os
 import pickle
+
 import numpy as np
 import torch
-from torch import nn
 import torch.nn.functional as F
-from torch.utils.data import DataLoader
 import torch.optim as optim
+from torch import nn
+from torch.utils.data import DataLoader
 
-from data_openml import DataSetCatCon_imputedX
-from augmentations import embed_data_mask, add_noise  # mixup_data is imported dynamically if needed
+from augmentations import add_noise, embed_data_mask  # mixup_data is imported dynamically if needed
 from corruptor import Corruptor
+from data_openml import DataSetCatCon_imputedX
 
 
 def DeepIFSAC_pretrain(model, cat_idxs, X_train, y_train, X_train_imp, train_mask,
