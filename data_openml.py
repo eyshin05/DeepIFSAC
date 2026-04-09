@@ -1,10 +1,9 @@
-import openml
 import numpy as np
-from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import train_test_split
 import pandas as pd
+import openml
+from sklearn.model_selection import StratifiedKFold, train_test_split
+from sklearn.preprocessing import LabelEncoder
 from torch.utils.data import Dataset
-from sklearn.model_selection import StratifiedKFold
 
 # import openml
 # import pandas as pd

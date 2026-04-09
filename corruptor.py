@@ -1,15 +1,12 @@
-import torch
+from functools import partial
+from itertools import cycle, product
 
 import numpy as np
 import pandas as pd
-
-from itertools import product,cycle
-from functools import partial
-
-from missingness.sampler import mar_sampling, mcar_sampling, mnar_sampling
+import torch
 from sklearn.impute import KNNImputer
 
-# need to remove unwanted imports
+from missingness.sampler import mar_sampling, mcar_sampling, mnar_sampling
 
 default_settings = {
     'method': 'pass',          # 'pass', 'noise' | 'draw' | 'sample' | 'knn' | 'mice'

@@ -1,27 +1,26 @@
 import os
 import argparse
 import pickle
-import numpy as np
-from tqdm import tqdm
 
+import numpy as np
 import torch
-from torch import nn
 import torch.nn.functional as F
+from torch import nn
 from torch.utils.data import DataLoader
 import torch.optim as optim
+from tqdm import tqdm
 
-from models import DeepIFSAC as DeepIFSAC_default
-
-from data_openml import my_data_prep_openml, task_dset_ids, DataSetCatCon, DataSetCatCon_imputedX
-from utils import count_parameters, my_classification_scores, mean_sq_error, clf_scores, imputed_data, run_mlp, train_and_test
-from augmentations import embed_data_mask, add_noise
-
-from sklearn.svm import SVC
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.tree import DecisionTreeClassifier
 from sklearn.base import clone as sk_clone
+from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
+from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier
+
+from augmentations import add_noise, embed_data_mask
+from data_openml import DataSetCatCon, DataSetCatCon_imputedX, my_data_prep_openml, task_dset_ids
+from models import DeepIFSAC as DeepIFSAC_default
+from utils import clf_scores, count_parameters, imputed_data, mean_sq_error, my_classification_scores, run_mlp, train_and_test
 
 # Define common classifiers for downstream tasks.
 common_classifiers = {

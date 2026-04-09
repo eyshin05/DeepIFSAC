@@ -137,14 +137,8 @@ class DeepIFSACImputer(BaseEstimator, TransformerMixin):
         cat_dims = np.array([1] + list(self.preprocessor_.cat_dims_), dtype=int)
 
         # 5. DataSet 구성
-        from data_openml import DataSetCatCon_imputedX
         X_dict = {'data': X_combined, 'mask': nan_mask}
         Y_dict = {'data': np.zeros((n, 1), dtype=np.int64)}
-        train_ds = DataSetCatCon_imputedX(
-            X_dict, X_train_imp.cpu().numpy(), Y_dict,
-            train_mask, cat_idxs, 'clf',
-            continuous_mean_std, imp_continuous_mean_std,
-        )
 
         # 6. 모델 생성
         from models.pretrainmodel import DeepIFSAC
