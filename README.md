@@ -52,7 +52,7 @@ DeepIFSAC implements a **pretraining phase** (contrastive and denoising objectiv
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/mdsamad001/DeepIFSAC.git
+git clone https://github.com/eyshin05/DeepIFSAC.git
 cd DeepIFSAC
 ```
 
