@@ -122,7 +122,10 @@ class DeepIFSACImputer(BaseEstimator, TransformerMixin):
         # 2. 학습용 imputed 버전 (NaN을 mean으로 채운 버전)
         import torch
         X_train_imp = torch.tensor(X_combined)
-        train_mask = torch.tensor(1 - nan_mask, dtype=torch.float32)  # 1=missing
+        train_mask_full = torch.tensor(1 - nan_mask, dtype=torch.float32)  # 1=missing, (n, n_features)
+        # pretraining.py의 denoising loss는 con_outs (연속형 출력)와 train_mask를 곱하므로
+        # t_mask를 연속형 컬럼만으로 슬라이싱해야 shape mismatch를 방지함
+        train_mask = train_mask_full[:, con_idxs] if len(con_idxs) > 0 else train_mask_full
 
         # 3. 정규화 파라미터
         train_mean = self.preprocessor_.mean_
@@ -323,6 +326,7 @@ class DeepIFSACImputer(BaseEstimator, TransformerMixin):
     # ------------------------------------------------------------------
 
     def _resolve_device(self):
+        import torch
         if self.device == 'auto':
             return torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         return torch.device(self.device)

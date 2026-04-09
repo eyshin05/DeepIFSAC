@@ -7,7 +7,6 @@ from itertools import product,cycle
 from functools import partial
 
 from missingness.sampler import mar_sampling, mcar_sampling, mnar_sampling
-import MICE.micegradient.micegradient as mg
 from sklearn.impute import KNNImputer
 
 # need to remove unwanted imports
@@ -174,9 +173,10 @@ class Corruptor:
     
     
     def _mice(self, X):
+        import MICE.micegradient.micegradient as mg
         device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         # to(device) = X.to(device)
-        
+
         _, X_missing = self.missing_sampler(pd.DataFrame(X), self.missing, None)
         empty_cols = X_missing.columns[X_missing.isna().all(axis=0)].values
         X_missing.loc[:, empty_cols] = 0
