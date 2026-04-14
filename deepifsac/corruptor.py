@@ -157,7 +157,7 @@ class Corruptor:
         device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         # X = X.to(device)
         # print('corruptor', self.missing)
-        _, X_missing = self.missing_sampler(pd.DataFrame(X), self.missing, None)
+        _, X_missing = self.missing_sampler(pd.DataFrame(X.detach().cpu().numpy()), self.missing, None)
         # print('NAN values', X_missing.isna().sum().sum())
         X1 = torch.from_numpy(X_missing.to_numpy())
         self.mask = self._get_c_mask(X1)
