@@ -214,7 +214,7 @@ class Corruptor:
 
         # print('DRAW:   ',real+draws)
 
-        return torch.tensor(real + draws), mask
+        return (real + draws).detach().clone(), mask
 
     def _draw_error(self, X0):
         ''' 
